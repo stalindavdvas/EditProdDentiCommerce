@@ -1,12 +1,11 @@
 # productos/routes.py
-from . import productos_bp  # Importar el Blueprint desde el módulo productos
+from . import productos_bp
 from flask import request, jsonify
-from database import get_db_connection  # Importar la conexión a la base de datos
+from database import get_db_connection
 
-# Registrar la ruta PUT /productos/<int:product_id> en el Blueprint
 @productos_bp.route('/<int:product_id>', methods=['PUT'])
 def actualizar_producto(product_id):
-    """Actualizar un producto por ID"""
+    """Update by ID"""
     data = request.get_json()
     nombre = data.get('name')
     descripcion = data.get('description')
@@ -17,13 +16,13 @@ def actualizar_producto(product_id):
 
     # Validar campos obligatorios
     if not (nombre and precio and categoria_id):
-        return jsonify({'error': 'Nombre, precio y categoría son obligatorios'}), 400
+        return jsonify({'error': 'name, price and category are required'}), 400
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        # Actualizar el producto en la base de datos
+        # Update database
         query = """
             UPDATE products
             SET name = %s, description = %s, price = %s, stock = %s, 
@@ -42,16 +41,15 @@ def actualizar_producto(product_id):
             'id': producto[0],
             'name': producto[1],
             'description': producto[2],
-            'price': str(producto[3]),  # Convertir a string para evitar problemas con JSON
+            'price': str(producto[3]),
             'stock': producto[4],
             'category_id': producto[5],
             'image_url': producto[6]
         }), 200
     except Exception as e:
-        # En caso de error, hacer rollback y devolver el mensaje de error
         conn.rollback()
         return jsonify({'error': str(e)}), 500
     finally:
-        # Cerrar la conexión a la base de datos
+        # Close database connection
         cursor.close()
         conn.close()
